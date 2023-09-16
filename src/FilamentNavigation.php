@@ -4,8 +4,7 @@ namespace RyanChandler\FilamentNavigation;
 
 use Closure;
 use Filament\Contracts\Plugin;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
+use Filament\Forms;
 use Filament\Panel;
 use Illuminate\Support\Str;
 use RyanChandler\FilamentNavigation\Filament\Resources\NavigationResource;
@@ -19,14 +18,14 @@ class FilamentNavigation implements Plugin
 
     protected array $itemTypes = [];
 
-    protected array | Closure $extraFields = [];
+    protected array|Closure $extraFields = [];
 
     public function getId(): string
     {
         return 'navigation';
     }
 
-    /** @param class-string<\Filament\Resources\Resource> $resource */
+    /** @param  class-string<\Filament\Resources\Resource>  $resource */
     public function usingResource(string $resource): static
     {
         $this->resource = $resource;
@@ -34,7 +33,7 @@ class FilamentNavigation implements Plugin
         return $this;
     }
 
-    /** @param class-string<\Illuminate\Database\Eloquent\Model> $model */
+    /** @param  class-string<\Illuminate\Database\Eloquent\Model>  $model */
     public function usingModel(string $model): static
     {
         $this->model = $model;
@@ -42,7 +41,7 @@ class FilamentNavigation implements Plugin
         return $this;
     }
 
-    public function itemType(string $name, array | Closure $fields, ?string $slug = null): static
+    public function itemType(string $name, array|Closure $fields, string $slug = null): static
     {
         $this->itemTypes[$slug ?? Str::slug($name)] = [
             'name' => $name,
@@ -52,7 +51,7 @@ class FilamentNavigation implements Plugin
         return $this;
     }
 
-    public function withExtraFields(array | Closure $schema): static
+    public function withExtraFields(array|Closure $schema): static
     {
         $this->extraFields = $schema;
 
@@ -90,7 +89,7 @@ class FilamentNavigation implements Plugin
         return $this->resource;
     }
 
-    public function getExtraFields(): array | Closure
+    public function getExtraFields(): array|Closure
     {
         return $this->extraFields;
     }
@@ -102,17 +101,31 @@ class FilamentNavigation implements Plugin
                 'external-link' => [
                     'name' => __('filament-navigation::filament-navigation.attributes.external-link'),
                     'fields' => [
-                        TextInput::make('url')
-                            ->label(__('filament-navigation::filament-navigation.attributes.url'))
-                            ->required(),
-                        Select::make('target')
-                            ->label(__('filament-navigation::filament-navigation.attributes.target'))
-                            ->options([
-                                '' => __('filament-navigation::filament-navigation.select-options.same-tab'),
-                                '_blank' => __('filament-navigation::filament-navigation.select-options.new-tab'),
-                            ])
-                            ->default('')
-                            ->selectablePlaceholder(false),
+                        Forms\Components\Section::make()
+                        ->description(__('hints.nav.add_url'))
+                        ->icon('heroicon-m-link')
+                            ->schema([
+                                Forms\Components\Grid::make()
+                                    ->schema([
+                                        Forms\Components\TextInput::make('url')
+                                            ->string()
+                                            ->hiddenLabel()
+                                            ->maxLength(255)
+                                            ->placeholder(__('action.add', ['option' => __('label.url')]))
+                                            ->suffixIcon('heroicon-m-globe-alt')
+                                            ->label(__('filament-navigation::filament-navigation.attributes.url'))
+                                            ->required(),
+                                        Forms\Components\Radio::make('target')
+                                            ->hiddenLabel()
+                                            ->label(__('filament-navigation::filament-navigation.attributes.target'))
+                                            ->options([
+                                                '_self' => __('filament-navigation::filament-navigation.select-options.same-tab'),
+                                                '_blank' => __('filament-navigation::filament-navigation.select-options.new-tab'),
+                                            ])
+                                            ->default('_self')
+                                            ->inline(),
+                                    ]),
+                            ]),
                     ],
                 ],
             ],
